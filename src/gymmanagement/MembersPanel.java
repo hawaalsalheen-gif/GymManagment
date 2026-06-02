@@ -15,6 +15,11 @@ public class MembersPanel extends javax.swing.JPanel {
      */
     public MembersPanel() {
         initComponents();
+        // 1. جعل الجدول يوزع المساحة تلقائياً بالتساوي على الأعمدة
+        tableMembers.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+
+         // 2. إجبار الأعمدة على إعادة حساب أحجامها بالتساوي فوراً
+         tableMembers.doLayout();
     }
 
     /**
@@ -42,18 +47,16 @@ public class MembersPanel extends javax.swing.JPanel {
 
         tableMembers.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3"
+                "Name", "Number Phone", "Subscription"
             }
         ));
+        tableMembers.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
         jScrollPane1.setViewportView(tableMembers);
 
-        add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 300, 150));
+        add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 320, 150));
 
         btnAddMember.setBackground(new java.awt.Color(204, 204, 255));
         btnAddMember.setFont(new java.awt.Font("Segoe Print", 1, 12)); // NOI18N
@@ -68,17 +71,93 @@ public class MembersPanel extends javax.swing.JPanel {
         btnEditMember.setBackground(new java.awt.Color(204, 204, 255));
         btnEditMember.setFont(new java.awt.Font("Segoe Print", 1, 12)); // NOI18N
         btnEditMember.setText("Edit Data");
+        btnEditMember.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEditMemberActionPerformed(evt);
+            }
+        });
         add(btnEditMember, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 210, -1, -1));
 
         btnDeleteMember.setBackground(new java.awt.Color(204, 204, 255));
         btnDeleteMember.setFont(new java.awt.Font("Segoe Print", 1, 12)); // NOI18N
         btnDeleteMember.setText("Delete");
+        btnDeleteMember.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteMemberActionPerformed(evt);
+            }
+        });
         add(btnDeleteMember, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 210, -1, -1));
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAddMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddMemberActionPerformed
         // TODO add your handling code here:
+        // كود بديل ومباشر لفتح الشاشة المنبثقة بدون تعقيد
+        try {
+            // نفتحوا الشاشة ونمرروا لها null كـ Parent عشان تفتح فوراً في كل الأحوال
+            AddMemberDialog addDialog = new AddMemberDialog(null, true);
+             addDialog.setVisible(true);
+        } catch (Exception e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "خطأ في فتح الشاشة: " + e.getMessage());
+            }
     }//GEN-LAST:event_btnAddMemberActionPerformed
+
+    private void btnEditMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditMemberActionPerformed
+        // TODO add your handling code here:
+        // 1. الحصول على الموديل ومعرفة السطر المحدد أولاً
+         javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
+          int selectedRow = tableMembers.getSelectedRow();
+
+         // 2. التحقق من أن المستخدم حدد سطراً بالفعل
+         if (selectedRow == -1) {
+         javax.swing.JOptionPane.showMessageDialog(this, 
+            "الرجاء تحديد مشترك من الجدول أولاً لتعديل بياناته!", 
+            "تنبيه", 
+            javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+        }
+
+          // 3. سحب البيانات الحالية من السطر المحدد (توا الجافا حتعرف المتغيرات)
+        String currentName = model.getValueAt(selectedRow, 0).toString();
+        String currentPhone = model.getValueAt(selectedRow, 1).toString();
+        String currentPlan = model.getValueAt(selectedRow, 2).toString();
+
+         // 4. إنشاء الـ Dialog وتمرير البيانات عبر الدالة الـ Public
+        AddMemberDialog editDialog = new AddMemberDialog(null, true);
+         editDialog.setMemberData(currentName, currentPhone, currentPlan);
+
+        // 5. إظهار الشاشة
+        editDialog.setVisible(true);
+    }//GEN-LAST:event_btnEditMemberActionPerformed
+
+    private void btnDeleteMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteMemberActionPerformed
+        // TODO add your handling code here:
+        // 1. الحصول على الموديل الخاص بالجدول
+     javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
+
+     // 2. معرفة السطر الذي قام المستخدم بتحديده بالماوس
+     int selectedRow = tableMembers.getSelectedRow();
+
+    // 3. التحقق مما إذا كان المستخدم قد حدد سطراً بالفعل (Exception Handling ذكي)
+        if (selectedRow == -1) {
+         javax.swing.JOptionPane.showMessageDialog(this, 
+            "الرجاء تحديد مشترك من الجدول أولاً لحذفه!", 
+            "تنبيه", 
+            javax.swing.JOptionPane.WARNING_MESSAGE);
+         return; // يوقف الكود
+        }
+
+         // 4. إظهار رسالة تأكيد للمستخدم قبل الحذف الفعلي لضمان سلامة البيانات
+          int confirm = javax.swing.JOptionPane.showConfirmDialog(this, 
+             "هل أنتِ متأكدة من حذف هذا المشترك؟", 
+             "تأكيد الحذف", 
+            javax.swing.JOptionPane.YES_NO_OPTION);
+
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+          // مسح السطر المحدد بنجاح
+          model.removeRow(selectedRow);
+         javax.swing.JOptionPane.showMessageDialog(this, "تم حذف المشترك بنجاح!");
+        }
+    }//GEN-LAST:event_btnDeleteMemberActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
