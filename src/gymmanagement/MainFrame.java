@@ -67,13 +67,18 @@ public class MainFrame extends javax.swing.JFrame {
         btnSubscriptions.setBackground(new java.awt.Color(204, 204, 255));
         btnSubscriptions.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnSubscriptions.setForeground(new java.awt.Color(0, 0, 102));
-        btnSubscriptions.setText("Plans");
+        btnSubscriptions.setText("Subscriptions");
         btnSubscriptions.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btnSubscriptionsMouseEntered(evt);
             }
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btnSubscriptionsMouseExited(evt);
+            }
+        });
+        btnSubscriptions.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSubscriptionsActionPerformed(evt);
             }
         });
 
@@ -224,6 +229,22 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
          showPanel(new MembersPanel());
     }//GEN-LAST:event_btnManageMembersActionPerformed
+
+    private void btnSubscriptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSubscriptionsActionPerformed
+        // TODO add your handling code here:
+         // 1. إنشاء نسخة من الشاشة
+        SubscriptionPanel subscriptionsPanel = new SubscriptionPanel();
+    
+        // 2. تنظيف الشاشة الجانبية
+        contentPanel.removeAll();
+    
+        // 3. الإضافة بالطريقة اللي يحبها الـ Absolute Layout (تحديد الموقع والأبعاد)
+        contentPanel.add(subscriptionsPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, contentPanel.getWidth(), contentPanel.getHeight()));
+    
+        // 4. التحديث والتأكيد
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }//GEN-LAST:event_btnSubscriptionsActionPerformed
 
     /**
      * @param args the command line arguments
