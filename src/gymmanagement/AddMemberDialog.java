@@ -11,20 +11,40 @@ package gymmanagement;
 public class AddMemberDialog extends javax.swing.JDialog {
     // متغير مخفي لمعرفة حالة الشاشة: true تعني تعديل، false تعني إضافة جديدة
     private boolean isEditMode = false;
+    // متغيرات لحفظ البيانات المدخلة بشكل مؤقت لتمريرها للشاشة الرئيسية
+    private boolean succeeded = false;
+    
+    public boolean isSucceeded() { return succeeded; }
+    public String getMemberName() { return txtName.getText().trim(); }
+    public String getMemberPhone() { return txtPhone.getText().trim(); }
+    public String getSelectedSubscription() { return cmbSubscription.getSelectedItem() != null ? cmbSubscription.getSelectedItem().toString() : ""; }
     /**
      * Creates new form AddMemberDialog
      */
+    // Constructor ذكي يستقبل جدول الاشتراكات ويعبي الـ ComboBox تلقائياً
+     public AddMemberDialog(java.awt.Frame parent, boolean modal, javax.swing.table.DefaultTableModel subscriptionModel) {
+        
+        super(parent, modal);
+         initComponents();
+    
+    // تعبئة الـ ComboBox بالبيانات القادمة من جدول الاشتراكات
+         cmbSubscription.removeAllItems();
+        for (int i = 0; i < subscriptionModel.getRowCount(); i++) {
+            String planName = subscriptionModel.getValueAt(i, 0).toString();
+            cmbSubscription.addItem(planName);
+        }
+    }
+        // Constructor إضافي (Overloading) عشان يخلي الأزرار القديمة تشتغل بدون خطأ
     public AddMemberDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        setLocationRelativeTo(null); // لجعل الشاشة تفتح في منتصف الشاشة تلقائياً
-        
-    }
+    } 
+     
     // دالة عامة (Public Method) تسمح بتمرير البيانات بأمان ومطابقة لشروط الـ OOP
     public void setMemberData(String name, String phone, String plan) {
       this.txtName.setText(name);
       this.txtPhone.setText(phone);
-      this.cmbPlan.setSelectedItem(plan);
+      this.cmbSubscription.setSelectedItem(plan);
       
       this.isEditMode= true;  //قلب الحالة وضع التعديل برمجيا 
       this.btnSave.setText("Update"); // تغيير اسم الزر عند التعديل
@@ -45,46 +65,53 @@ public class AddMemberDialog extends javax.swing.JDialog {
         jLabel3 = new javax.swing.JLabel();
         txtPhone = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
-        cmbPlan = new javax.swing.JComboBox<>();
+        cmbSubscription = new javax.swing.JComboBox<>();
         btnCancel = new javax.swing.JButton();
         btnSave = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
+        txtEndDate = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setFont(new java.awt.Font("Segoe Print", 1, 18)); // NOI18N
         jLabel1.setText("Add New Member");
-        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 30, -1, -1));
+        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, -1, -1));
 
         txtName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtNameActionPerformed(evt);
             }
         });
-        getContentPane().add(txtName, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 90, 150, 30));
+        getContentPane().add(txtName, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 60, 150, 30));
 
         jLabel2.setFont(new java.awt.Font("Segoe Print", 1, 14)); // NOI18N
-        jLabel2.setText("Subscription  :");
-        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 170, -1, -1));
+        jLabel2.setText("End Date  :");
+        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 170, -1, 30));
 
         jLabel3.setFont(new java.awt.Font("Segoe Print", 1, 14)); // NOI18N
         jLabel3.setText("Member Name : ");
-        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 90, -1, -1));
+        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, -1, -1));
 
         txtPhone.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtPhoneActionPerformed(evt);
             }
         });
-        getContentPane().add(txtPhone, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 130, 150, 30));
+        getContentPane().add(txtPhone, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 100, 150, 30));
 
         jLabel4.setFont(new java.awt.Font("Segoe Print", 1, 14)); // NOI18N
         jLabel4.setText("Number Phone :");
-        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 130, -1, -1));
+        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 100, -1, -1));
 
-        cmbPlan.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Monthly", "Months 3", "Annual" }));
-        getContentPane().add(cmbPlan, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 170, 100, -1));
+        cmbSubscription.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Monthly", "Months 3", "Months 6", "Annual" }));
+        cmbSubscription.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbSubscriptionActionPerformed(evt);
+            }
+        });
+        getContentPane().add(cmbSubscription, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 140, 100, -1));
 
         btnCancel.setBackground(new java.awt.Color(204, 204, 255));
         btnCancel.setFont(new java.awt.Font("Segoe Print", 1, 14)); // NOI18N
@@ -94,7 +121,7 @@ public class AddMemberDialog extends javax.swing.JDialog {
                 btnCancelActionPerformed(evt);
             }
         });
-        getContentPane().add(btnCancel, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 240, -1, -1));
+        getContentPane().add(btnCancel, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 230, -1, -1));
 
         btnSave.setBackground(new java.awt.Color(204, 204, 255));
         btnSave.setFont(new java.awt.Font("Segoe Print", 1, 14)); // NOI18N
@@ -104,10 +131,15 @@ public class AddMemberDialog extends javax.swing.JDialog {
                 btnSaveActionPerformed(evt);
             }
         });
-        getContentPane().add(btnSave, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 240, -1, -1));
+        getContentPane().add(btnSave, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 230, -1, -1));
 
         jLabel5.setIcon(new javax.swing.ImageIcon("C:\\Users\\hp\\Desktop\\oop project gym\\logo.png")); // NOI18N
-        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 180, 110, 110));
+        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 10, 110, 110));
+        getContentPane().add(txtEndDate, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 170, 140, 30));
+
+        jLabel6.setFont(new java.awt.Font("Segoe Print", 1, 14)); // NOI18N
+        jLabel6.setText("Subscription  :");
+        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 140, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -126,65 +158,54 @@ public class AddMemberDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnCancelActionPerformed
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
-         // 1. قراءة البيانات والتحقق منها كالعادة
-String name = txtName.getText().trim();
-String phone = txtPhone.getText().trim();
-String plan = cmbPlan.getSelectedItem().toString();
-
-if (name.isEmpty() || phone.isEmpty()) {
-    javax.swing.JOptionPane.showMessageDialog(this, "الرجاء تعبئة جميع الحقول!", "خطأ", javax.swing.JOptionPane.ERROR_MESSAGE);
-    return;
-}
-
-// 2. الوصول للجدول وتحديثه أو الإضافة فيه
-try {
-    java.awt.Window[] windows = java.awt.Window.getWindows();
-    for (java.awt.Window window : windows) {
-        if (window instanceof javax.swing.JFrame && window.isVisible()) {
-            javax.swing.JFrame mainFrame = (javax.swing.JFrame) window;
-            for (java.awt.Component comp : mainFrame.getContentPane().getComponents()) {
-                if (comp instanceof javax.swing.JPanel) {
-                    javax.swing.JPanel contentPanel = (javax.swing.JPanel) comp;
-                    for (java.awt.Component subComp : contentPanel.getComponents()) {
-                        if (subComp.getClass().getName().endsWith("MembersPanel")) {
-                            javax.swing.JPanel membersPanel = (javax.swing.JPanel) subComp;
-                            for (java.awt.Component panelComp : membersPanel.getComponents()) {
-                                if (panelComp instanceof javax.swing.JScrollPane) {
-                                    javax.swing.JScrollPane scrollPane = (javax.swing.JScrollPane) panelComp;
-                                    if (scrollPane.getViewport().getView() instanceof javax.swing.JTable) {
-                                        javax.swing.JTable table = (javax.swing.JTable) scrollPane.getViewport().getView();
-                                        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) table.getModel();
-                                        
-                                        // 🌟 الفحص الذكي بناءً على المتغير المخفي
-                                        if (isEditMode) {
-                                            // لو في وضع التعديل، نعدل السطر الحالي
-                                            int selectedRow = table.getSelectedRow();
-                                            if (selectedRow != -1) {
-                                                model.setValueAt(name, selectedRow, 0);  
-                                                model.setValueAt(phone, selectedRow, 1); 
-                                                model.setValueAt(plan, selectedRow, 2);  
-                                            }
-                                        } else {
-                                            // لو مش تعديل (إضافة جديدة)، يضيف سطر جديد
-                                            model.addRow(new Object[]{name, phone, plan});
-                                        }
-                                        
-                                        this.dispose(); // إغلاق الشاشة
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+          
+        // 1. التحقق من أن الخانات مش فاضية (Validation)
+        if (txtName.getText().trim().isEmpty() || txtPhone.getText().trim().isEmpty()) {
+        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء تعبئة جميع الحقول المطلوبة!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
     }
-} catch (Exception e) {
-    javax.swing.JOptionPane.showMessageDialog(this, "خطأ: " + e.getMessage());
-}
-        
+    
+        // 2. التحقق من أن المستخدم اختار اشتراك فعلاً
+        if (cmbSubscription.getSelectedItem() == null) {
+        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء اختيار نوع الاشتراك!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    
+        // 3. تأكيد النجاح وإغلاق الشاشة
+        succeeded = true;
+        this.dispose(); 
+
     }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void cmbSubscriptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbSubscriptionActionPerformed
+        // TODO add your handling code here:
+           // 1. التأكد من أن المستخدم اختار حاجة فعلاً ومش فاضي
+    if (cmbSubscription.getSelectedItem() == null) return;
+    
+    String selectedPlan = cmbSubscription.getSelectedItem().toString().toLowerCase();
+    
+    // 2. الحصول على تاريخ اليوم كبداية للاشتراك
+    java.time.LocalDate startDate = java.time.LocalDate.now();
+    java.time.LocalDate endDate = startDate; // افتراضي
+    
+    // 3. حسبة المدة بناءً على اسم الاشتراك المحدد
+    if (selectedPlan.contains("monthly") || selectedPlan.contains("شهر")) {
+        endDate = startDate.plusMonths(1);
+    } else if (selectedPlan.contains("3 months") || selectedPlan.contains("3 أشهر")) {
+        endDate = startDate.plusMonths(3);
+    } else if (selectedPlan.contains("6 months") || selectedPlan.contains("6 أشهر")) {
+        endDate = startDate.plusMonths(6);
+    } else if (selectedPlan.contains("annual")|| selectedPlan.contains("year") || selectedPlan.contains("سنة")) {
+        endDate = startDate.plusYears(1);
+    } else {
+        // لو اشتراك مخصص، نزيدوا شهر افتراضي
+        endDate = startDate.plusMonths(1); 
+    }
+    
+    // 4. صيغة التاريخ وتحديث الخانة (تأكدي من اسم تيكست التاريخ عندك، افترضناه txtEndDate)
+    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    txtEndDate.setText(endDate.format(formatter));
+    }//GEN-LAST:event_cmbSubscriptionActionPerformed
 
     /**
      * @param args the command line arguments
@@ -231,13 +252,26 @@ try {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnSave;
-    private javax.swing.JComboBox<String> cmbPlan;
+    private javax.swing.JComboBox<String> cmbSubscription;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JTextField txtEndDate;
     private javax.swing.JTextField txtName;
     private javax.swing.JTextField txtPhone;
     // End of variables declaration//GEN-END:variables
+
+      public void populateSubscriptionComboBox(javax.swing.table.DefaultTableModel subscriptionTableModel) {
+    // 1. تنظيف الـ ComboBox من أي خيارات قديمة
+         cmbSubscription.removeAllItems();
+    
+    // 2. الدوران على أسطر جدول الاشتراكات وسحب الأسماء
+         for (int i = 0; i < subscriptionTableModel.getRowCount(); i++) {
+             String planName = subscriptionTableModel.getValueAt(i, 0).toString();
+            cmbSubscription.addItem(planName); // إضافة اسم الاشتراك للقائمة
+        }
+     }
 }

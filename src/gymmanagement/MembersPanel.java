@@ -91,72 +91,95 @@ public class MembersPanel extends javax.swing.JPanel {
 
     private void btnAddMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddMemberActionPerformed
         // TODO add your handling code here:
-        // كود بديل ومباشر لفتح الشاشة المنبثقة بدون تعقيد
-        try {
-            // نفتحوا الشاشة ونمرروا لها null كـ Parent عشان تفتح فوراً في كل الأحوال
-            AddMemberDialog addDialog = new AddMemberDialog(null, true);
-             addDialog.setVisible(true);
-        } catch (Exception e) {
-            javax.swing.JOptionPane.showMessageDialog(this, "خطأ في فتح الشاشة: " + e.getMessage());
-            }
+         
+         
+        java.awt.Frame parentFrame = (java.awt.Frame) javax.swing.SwingUtilities.getWindowAncestor(this);
+        javax.swing.table.DefaultTableModel subModel = gymmanagement.SubscriptionPanel.getSubscriptionTableModel();
+    
+        AddMemberDialog dialog;
+         if (subModel != null) {
+        dialog = new AddMemberDialog(parentFrame, true, subModel);
+    } else {
+            dialog = new AddMemberDialog(parentFrame, true);
+        }
+    
+          // إظهار الشاشة
+          dialog.setVisible(true);
+    
+        // 4. بعد إغلاق الشاشة، نتحققوا لو المستخدم ضغط على Save
+        if (dialog.isSucceeded()) {
+        // نسحبوا البيانات من الـ Dialog
+        String name = dialog.getMemberName();
+        String phone = dialog.getMemberPhone();
+        String subscription = dialog.getSelectedSubscription();
+        
+        // نضيفوا الصف الجديد في جدول الأعضاء (تأكدي من اسم الجدول عندك، افترضناه tableMembers)
+        javax.swing.table.DefaultTableModel memberModel = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
+        memberModel.addRow(new Object[]{name, phone, subscription});
+        
+        javax.swing.JOptionPane.showMessageDialog(this, "تم إضافة العضو بنجاح!", "نجاح", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        }
+
+
     }//GEN-LAST:event_btnAddMemberActionPerformed
 
     private void btnEditMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditMemberActionPerformed
         // TODO add your handling code here:
-        // 1. الحصول على الموديل ومعرفة السطر المحدد أولاً
-         javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
-          int selectedRow = tableMembers.getSelectedRow();
-
-         // 2. التحقق من أن المستخدم حدد سطراً بالفعل
-         if (selectedRow == -1) {
-         javax.swing.JOptionPane.showMessageDialog(this, 
-            "الرجاء تحديد مشترك من الجدول أولاً لتعديل بياناته!", 
-            "تنبيه", 
-            javax.swing.JOptionPane.WARNING_MESSAGE);
+        
+    // 1. التحقق من أن المستخدم حدد صفاً من الجدول (تأكدي من اسم الجدول tableMembers)
+        int selectedRow = tableMembers.getSelectedRow();
+        if (selectedRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء تحديد عضو من الجدول لتعديله!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
         return;
+    }
+    
+         // 2. سحب البيانات الحالية من الصف المحدد
+        String currentName = tableMembers.getValueAt(selectedRow, 0).toString();
+        String currentPhone = tableMembers.getValueAt(selectedRow, 1).toString();
+        String currentPlan = tableMembers.getValueAt(selectedRow, 2).toString();
+    
+        // 3. فتح الـ Dialog وتمرير البيانات ليه
+        java.awt.Frame parentFrame = (java.awt.Frame) javax.swing.SwingUtilities.getWindowAncestor(this);
+        javax.swing.table.DefaultTableModel subModel = gymmanagement.SubscriptionPanel.getSubscriptionTableModel();
+    
+        AddMemberDialog dialog = (subModel != null) ? new AddMemberDialog(parentFrame, true, subModel) : new AddMemberDialog(parentFrame, true);
+    
+        // تمرير البيانات للشاشة عشان تطلع معبية تلقائياً
+        dialog.setMemberData(currentName, currentPhone, currentPlan);
+         dialog.setVisible(true);
+    
+         // 4. بعد إغلاق الشاشة، لو ضغط على الحفظ (Update) نحدثوا الجدول فوراً
+        if (dialog.isSucceeded()) {
+            tableMembers.setValueAt(dialog.getMemberName(), selectedRow, 0);
+            tableMembers.setValueAt(dialog.getMemberPhone(), selectedRow, 1);
+            tableMembers.setValueAt(dialog.getSelectedSubscription(), selectedRow, 2);
+        
+            javax.swing.JOptionPane.showMessageDialog(this, "تم تعديل بيانات العضو بنجاح!", "نجاح", javax.swing.JOptionPane.INFORMATION_MESSAGE);
         }
 
-          // 3. سحب البيانات الحالية من السطر المحدد (توا الجافا حتعرف المتغيرات)
-        String currentName = model.getValueAt(selectedRow, 0).toString();
-        String currentPhone = model.getValueAt(selectedRow, 1).toString();
-        String currentPlan = model.getValueAt(selectedRow, 2).toString();
-
-         // 4. إنشاء الـ Dialog وتمرير البيانات عبر الدالة الـ Public
-        AddMemberDialog editDialog = new AddMemberDialog(null, true);
-         editDialog.setMemberData(currentName, currentPhone, currentPlan);
-
-        // 5. إظهار الشاشة
-        editDialog.setVisible(true);
     }//GEN-LAST:event_btnEditMemberActionPerformed
 
     private void btnDeleteMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteMemberActionPerformed
         // TODO add your handling code here:
-        // 1. الحصول على الموديل الخاص بالجدول
-     javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
-
-     // 2. معرفة السطر الذي قام المستخدم بتحديده بالماوس
-     int selectedRow = tableMembers.getSelectedRow();
-
-    // 3. التحقق مما إذا كان المستخدم قد حدد سطراً بالفعل (Exception Handling ذكي)
-        if (selectedRow == -1) {
-         javax.swing.JOptionPane.showMessageDialog(this, 
-            "الرجاء تحديد مشترك من الجدول أولاً لحذفه!", 
-            "تنبيه", 
-            javax.swing.JOptionPane.WARNING_MESSAGE);
-         return; // يوقف الكود
-        }
-
-         // 4. إظهار رسالة تأكيد للمستخدم قبل الحذف الفعلي لضمان سلامة البيانات
-          int confirm = javax.swing.JOptionPane.showConfirmDialog(this, 
-             "هل أنتِ متأكدة من حذف هذا المشترك؟", 
-             "تأكيد الحذف", 
-            javax.swing.JOptionPane.YES_NO_OPTION);
-
-        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
-          // مسح السطر المحدد بنجاح
-          model.removeRow(selectedRow);
-         javax.swing.JOptionPane.showMessageDialog(this, "تم حذف المشترك بنجاح!");
-        }
+        
+    // 1. التحقق من تحديد صف
+    int selectedRow = tableMembers.getSelectedRow();
+    if (selectedRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء تحديد عضو من الجدول لحذفه!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    
+    // 2. رسالة تأكيد الحذف
+    int confirm = javax.swing.JOptionPane.showConfirmDialog(this, 
+            "هل أنتِ متأكدة من حذف هذا العضو نهائياً؟", "تأكيد الحذف", 
+            javax.swing.JOptionPane.YES_NO_OPTION, javax.swing.JOptionPane.QUESTION_MESSAGE);
+            
+    // 3. لو وافق، نحذفوا الصف من الموديل طول
+    if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
+        model.removeRow(selectedRow);
+        javax.swing.JOptionPane.showMessageDialog(this, "تم حذف العضو بنجاح!", "نجاح", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }
     }//GEN-LAST:event_btnDeleteMemberActionPerformed
 
 

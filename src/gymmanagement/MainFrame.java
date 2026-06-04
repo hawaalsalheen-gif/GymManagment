@@ -13,9 +13,20 @@ public class MainFrame extends javax.swing.JFrame {
     /**
      * Creates new form MainFrame
      */
-    public MainFrame() {
+    // متغير لحفظ دور المستخدم الحالي في الشاشة الرئيسية
+    private String userRole;
+
+    // الـ Constructor المعدل
+    public MainFrame(String role) {
         initComponents();
-    }
+        this.userRole = role;
+    
+        // تطبيق الصلاحيات فوراً أول ما تفتح الشاشة
+         applyPermissions();
+}
+     private void applyPermissions() {
+     
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -94,6 +105,11 @@ public class MainFrame extends javax.swing.JFrame {
                 btnManageCoachesMouseExited(evt);
             }
         });
+        btnManageCoaches.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnManageCoachesActionPerformed(evt);
+            }
+        });
 
         btnLogout.setBackground(new java.awt.Color(204, 204, 255));
         btnLogout.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -105,6 +121,11 @@ public class MainFrame extends javax.swing.JFrame {
             }
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btnLogoutMouseExited(evt);
+            }
+        });
+        btnLogout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLogoutActionPerformed(evt);
             }
         });
 
@@ -246,6 +267,36 @@ public class MainFrame extends javax.swing.JFrame {
         contentPanel.repaint();
     }//GEN-LAST:event_btnSubscriptionsActionPerformed
 
+    private void btnManageCoachesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageCoachesActionPerformed
+        // TODO add your handling code here:
+         // نمرروا الـ userRole اللي مخزن في الـ MainFrame للشاشة الجديدة
+    gymmanagement.CoachesPanel coachesPanel = new gymmanagement.CoachesPanel(this.userRole);
+    
+    contentPanel.removeAll();
+    contentPanel.add(coachesPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, contentPanel.getWidth(), contentPanel.getHeight()));
+    contentPanel.revalidate();
+    contentPanel.repaint();
+
+    }//GEN-LAST:event_btnManageCoachesActionPerformed
+
+    private void btnLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogoutActionPerformed
+        // TODO add your handling code here:
+        
+    // 1. إظهار رسالة تأكيد للمستخدم
+    int confirm = javax.swing.JOptionPane.showConfirmDialog(this, 
+            "Are you sure you want to logout?", "Logout", 
+            javax.swing.JOptionPane.YES_NO_OPTION, javax.swing.JOptionPane.QUESTION_MESSAGE);
+            
+    // 2. لو وافق، نسكروا الشاشة الحالية ونفتحوا شاشة اللوجن
+    if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+        this.dispose(); // إغلاق الـ MainFrame
+        
+        // فتح شاشة الـ Login (تأكدي من اسم الكلاس عندك، المفروض LoginFrame)
+        gymmanagement.LoginFrame login = new gymmanagement.LoginFrame();
+        login.setVisible(true);
+    }
+    }//GEN-LAST:event_btnLogoutActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -276,7 +327,7 @@ public class MainFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainFrame().setVisible(true);
+                new MainFrame("Admin").setVisible(true);
             }
         });
     }

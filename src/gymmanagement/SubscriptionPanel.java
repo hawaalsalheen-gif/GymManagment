@@ -19,6 +19,9 @@ public class SubscriptionPanel extends javax.swing.JPanel {
         initComponents();
         // ربط الـ tableModel بالجدول اللي صممتيه
         tableModel = (javax.swing.table.DefaultTableModel) tableSubscriptions.getModel();
+        // حفظ الـ Model الخاص بالجدول في المتغير الثابت أول ما تفتح الشاشة
+        // (تأكدي من اسم الجدول عندك لو كان tableSubscriptions أو jTable1 وعدليه هنا)
+        lastActiveModel = (javax.swing.table.DefaultTableModel) tableSubscriptions.getModel();
     }
 
     /**
@@ -166,4 +169,14 @@ public class SubscriptionPanel extends javax.swing.JPanel {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tableSubscriptions;
     // End of variables declaration//GEN-END:variables
+     // دالة ثابتة تسمح لسحب الـ Model الخاص بجدول الاشتراكات من أي مكان
+    private static javax.swing.table.DefaultTableModel lastActiveModel = null;
+
+    public static javax.swing.table.DefaultTableModel getSubscriptionTableModel() {
+        return lastActiveModel;
+     }
+
+     // حطي السطر هذا داخل الـ Constructor بتاع الـ SubscriptionPanel تحت ()initComponents
+    // lastActiveModel = (javax.swing.table.DefaultTableModel) tableSubscriptions.getModel();
+
 }
