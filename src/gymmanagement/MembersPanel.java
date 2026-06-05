@@ -15,6 +15,8 @@ public class MembersPanel extends javax.swing.JPanel {
      */
     public MembersPanel() {
         initComponents();
+         refreshMembersTable(); // لجلب البيانات القديمة أول ما تفتح الشاشة
+        
         // 1. جعل الجدول يوزع المساحة تلقائياً بالتساوي على الأعمدة
         tableMembers.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
 
@@ -91,35 +93,48 @@ public class MembersPanel extends javax.swing.JPanel {
 
     private void btnAddMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddMemberActionPerformed
         // TODO add your handling code here:
-         
-         
-        java.awt.Frame parentFrame = (java.awt.Frame) javax.swing.SwingUtilities.getWindowAncestor(this);
-        javax.swing.table.DefaultTableModel subModel = gymmanagement.SubscriptionPanel.getSubscriptionTableModel();
-    
-        AddMemberDialog dialog;
-         if (subModel != null) {
-        dialog = new AddMemberDialog(parentFrame, true, subModel);
+           java.awt.Frame parentFrame = (java.awt.Frame) javax.swing.SwingUtilities.getWindowAncestor(this);
+    javax.swing.table.DefaultTableModel subModel = gymmanagement.SubscriptionPanel.getSubscriptionTableModel();
+
+    AddMemberDialog dialog;
+    if (subModel != null) {
+    dialog = new AddMemberDialog(parentFrame, true, subModel, this); // مررنا this هنا
     } else {
-            dialog = new AddMemberDialog(parentFrame, true);
-        }
-    
-          // إظهار الشاشة
-          dialog.setVisible(true);
-    
-        // 4. بعد إغلاق الشاشة، نتحققوا لو المستخدم ضغط على Save
-        if (dialog.isSucceeded()) {
-        // نسحبوا البيانات من الـ Dialog
+    dialog = new AddMemberDialog(parentFrame, true, this); // ومررنا this هنا
+    }
+
+    // إظهار الشاشة الفرعية
+    dialog.setVisible(true);
+
+    // بعد إغلاق الشاشة، نتحققوا لو المستخدم ضغط على Save
+    if (dialog.isSucceeded()) {
         String name = dialog.getMemberName();
         String phone = dialog.getMemberPhone();
         String subscription = dialog.getSelectedSubscription();
-        
-        // نضيفوا الصف الجديد في جدول الأعضاء (تأكدي من اسم الجدول عندك، افترضناه tableMembers)
-        javax.swing.table.DefaultTableModel memberModel = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
-        memberModel.addRow(new Object[]{name, phone, subscription});
-        
-        javax.swing.JOptionPane.showMessageDialog(this, "تم إضافة العضو بنجاح!", "نجاح", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-        }
 
+        // 1. كود الحفظ في قاعدة البيانات
+        String query = "INSERT INTO members (name, phone, gender, join_date) VALUES (?, ?, ?, ?)";
+        
+        try (java.sql.Connection con = gymmanagement.database.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement pst = con.prepareStatement(query)) {
+            
+            pst.setString(1, name);
+            pst.setString(2, phone);
+            pst.setString(3, subscription); 
+            pst.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            
+            pst.executeUpdate(); // الحفظ في الداتابيز تم!
+            
+            // 2. تحديث جدول البيانات من قاعدة البيانات فوراً
+            refreshMembersTable();
+            
+            // 3. إظهار رسالة النجاح
+            javax.swing.JOptionPane.showMessageDialog(this, "تم إضافة العضو بنجاح وحفظه في قاعدة البيانات!", "نجاح", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (java.sql.SQLException e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "خطأ أثناء الحفظ في الداتابيز: " + e.getMessage(), "خطأ", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     }//GEN-LAST:event_btnAddMemberActionPerformed
 
@@ -142,8 +157,9 @@ public class MembersPanel extends javax.swing.JPanel {
         java.awt.Frame parentFrame = (java.awt.Frame) javax.swing.SwingUtilities.getWindowAncestor(this);
         javax.swing.table.DefaultTableModel subModel = gymmanagement.SubscriptionPanel.getSubscriptionTableModel();
     
-        AddMemberDialog dialog = (subModel != null) ? new AddMemberDialog(parentFrame, true, subModel) : new AddMemberDialog(parentFrame, true);
-    
+         AddMemberDialog dialog = (subModel != null) 
+         ? new AddMemberDialog(parentFrame, true, subModel, this) 
+         : new AddMemberDialog(parentFrame, true, this);
         // تمرير البيانات للشاشة عشان تطلع معبية تلقائياً
         dialog.setMemberData(currentName, currentPhone, currentPlan);
          dialog.setVisible(true);
@@ -161,25 +177,46 @@ public class MembersPanel extends javax.swing.JPanel {
 
     private void btnDeleteMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteMemberActionPerformed
         // TODO add your handling code here:
-        
-    // 1. التحقق من تحديد صف
+         
+    // 1. التأكد من أن المستخدم محدد سطر في الجدول
     int selectedRow = tableMembers.getSelectedRow();
+    
     if (selectedRow == -1) {
         javax.swing.JOptionPane.showMessageDialog(this, "الرجاء تحديد عضو من الجدول لحذفه!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
         return;
     }
     
-    // 2. رسالة تأكيد الحذف
+    // 2. أخذ اسم العضو من السطر المحدد (العمود الأول index 0) كمعرف للحذف
+    String memberName = tableMembers.getValueAt(selectedRow, 0).toString();
+    
+    // 3. تأكيد الحذف من المستخدم (شغل احترافي عشان ما ينحذفش بالخطأ)
     int confirm = javax.swing.JOptionPane.showConfirmDialog(this, 
-            "هل أنتِ متأكدة من حذف هذا العضو نهائياً؟", "تأكيد الحذف", 
-            javax.swing.JOptionPane.YES_NO_OPTION, javax.swing.JOptionPane.QUESTION_MESSAGE);
-            
-    // 3. لو وافق، نحذفوا الصف من الموديل طول
+            "هل أنتِ متأكدة من حذف العضو: " + memberName + "؟", 
+            "تأكيد الحذف", javax.swing.JOptionPane.YES_NO_OPTION);
+    
     if (confirm == javax.swing.JOptionPane.YES_OPTION) {
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
-        model.removeRow(selectedRow);
-        javax.swing.JOptionPane.showMessageDialog(this, "تم حذف العضو بنجاح!", "نجاح", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        // 4. كود الحذف من قاعدة البيانات الحقيقية
+        String query = "DELETE FROM members WHERE name = ?";
+        
+        try (java.sql.Connection con = gymmanagement.database.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement pst = con.prepareStatement(query)) {
+            
+            pst.setString(1, memberName);
+            int result = pst.executeUpdate();
+            
+            if (result > 0) {
+                // 5. الحذف من الجدول المعروض قدامكِ ع طول وبدون ما تطلعي وتخشي!
+                javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
+                model.removeRow(selectedRow);
+                
+                javax.swing.JOptionPane.showMessageDialog(this, "تم حذف العضو بنجاح من المنظومة!");
+            }
+            
+        } catch (java.sql.SQLException e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "خطأ أثناء الحذف من قاعدة البيانات: " + e.getMessage(), "خطأ", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
     }
+        
     }//GEN-LAST:event_btnDeleteMemberActionPerformed
 
 
@@ -191,4 +228,28 @@ public class MembersPanel extends javax.swing.JPanel {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tableMembers;
     // End of variables declaration//GEN-END:variables
+
+    public void refreshMembersTable() {
+    javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tableMembers.getModel();
+    model.setRowCount(0); 
+
+    String query = "SELECT * FROM members"; 
+    
+    try (java.sql.Connection con = gymmanagement.database.DatabaseConnection.getConnection();
+         java.sql.Statement stmt = con.createStatement();
+         java.sql.ResultSet rs = stmt.executeQuery(query)) {
+        
+        while (rs.next()) {
+            String name = rs.getString("name");
+            String phone = rs.getString("phone");
+            // حنقرو العمود الثالث اللي خزنّا فيه نوع الاشتراك
+            String subscription = rs.getString("gender"); 
+            
+            // إضافة السطر في جدولكِ (tableMembers) بالترتيب المظبوط
+            model.addRow(new Object[]{name, phone, subscription});
+        }
+    } catch (java.sql.SQLException e) {
+        javax.swing.JOptionPane.showMessageDialog(this, "خطأ في تحميل البيانات: " + e.getMessage(), "خطأ", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
+}
 }

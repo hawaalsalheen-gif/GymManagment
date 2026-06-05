@@ -15,6 +15,7 @@ public class LoginFrame extends javax.swing.JFrame {
      */
     public LoginFrame() {
         initComponents();
+        gymmanagement.database.DatabaseConnection.getConnection();
     }
 
     /**
@@ -96,26 +97,41 @@ public class LoginFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_txtUsernameActionPerformed
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-        // TODO add your handling code here:
-          String username = txtUsername.getText().trim();
-    String password = new String(txtPassword.getPassword());
-    String selectedRole = cmbRole.getSelectedItem().toString(); // الـ ComboBox بتاع الدور
+        String username = txtUsername.getText().trim();
+    String password = new String(txtPassword.getPassword()).trim();
+    String role = cmbRole.getSelectedItem().toString();
+
+    // التأكد من أن الخانات مش فاضية
+    if (username.isEmpty() || password.isEmpty()) {
+        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء إدخال اسم المستخدم وكلمة المرور!", "خطأ", javax.swing.JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+
+    // استدعاء الاتصال بقاعدة البيانات والتحقق من الحساب
+    String query = "SELECT * FROM users WHERE username = ? AND password = ? AND role = ?";
     
-    // التحقق التجريبي (لعند نربطوا الداتابيز غدوة)
-    if (username.equals("admin") && password.equals("123") && selectedRole.equals("Admin")) {
+    try (java.sql.Connection con = gymmanagement.database.DatabaseConnection.getConnection();
+         java.sql.PreparedStatement pst = con.prepareStatement(query)) {
         
-        this.dispose(); // إغلاق شاشة اللوجن
-        MainFrame main = new MainFrame("Admin"); // فتح المنظومة كـ أدمن
-        main.setVisible(true);
+        pst.setString(1, username);
+        pst.setString(2, password);
+        pst.setString(3, role);
         
-    } else if (username.equals("reception") && password.equals("123") && selectedRole.equals("Receptionist")) {
+        java.sql.ResultSet rs = pst.executeQuery();
         
-        this.dispose();
-        MainFrame main = new MainFrame("Receptionist"); // فتح المنظومة كـ موظف استقبال
-        main.setVisible(true);
+        if (rs.next()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "تم تسجيل الدخول بنجاح بنظام: " + role);
+            
+            // افتحي الشاشة الرئيسية (MainFrame) وابعثي لها الـ Role عشان تحدد الصلاحيات
+            MainFrame main = new MainFrame(role); 
+            main.setVisible(true);
+            this.dispose(); // إغلاق شاشة الـ Login
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this, "اسم المستخدم أو كلمة المرور أو الصلاحية غير صحيحة!", "فشل الدخول", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
         
-    } else {
-        javax.swing.JOptionPane.showMessageDialog(this, "Invalid credentials!", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+    } catch (java.sql.SQLException e) {
+        javax.swing.JOptionPane.showMessageDialog(this, "خطأ في الاتصال بقاعدة البيانات: " + e.getMessage(), "خطأ", javax.swing.JOptionPane.ERROR_MESSAGE);
     }
     }//GEN-LAST:event_btnLoginActionPerformed
 

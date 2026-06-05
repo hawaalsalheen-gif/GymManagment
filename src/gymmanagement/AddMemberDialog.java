@@ -18,27 +18,31 @@ public class AddMemberDialog extends javax.swing.JDialog {
     public String getMemberName() { return txtName.getText().trim(); }
     public String getMemberPhone() { return txtPhone.getText().trim(); }
     public String getSelectedSubscription() { return cmbSubscription.getSelectedItem() != null ? cmbSubscription.getSelectedItem().toString() : ""; }
+    private gymmanagement.MembersPanel parentPanel;
     /**
      * Creates new form AddMemberDialog
      */
     // Constructor ذكي يستقبل جدول الاشتراكات ويعبي الـ ComboBox تلقائياً
-     public AddMemberDialog(java.awt.Frame parent, boolean modal, javax.swing.table.DefaultTableModel subscriptionModel) {
-        
-        super(parent, modal);
-         initComponents();
-    
+     public AddMemberDialog(java.awt.Frame parent, boolean modal, javax.swing.table.DefaultTableModel subscriptionModel, gymmanagement.MembersPanel panel) {
+    super(parent, modal);
+    initComponents();
+    this.parentPanel = panel; // حفظ المرجع الحقيقي للبانل
+
     // تعبئة الـ ComboBox بالبيانات القادمة من جدول الاشتراكات
-         cmbSubscription.removeAllItems();
+    cmbSubscription.removeAllItems();
+    if (subscriptionModel != null) {
         for (int i = 0; i < subscriptionModel.getRowCount(); i++) {
             String planName = subscriptionModel.getValueAt(i, 0).toString();
             cmbSubscription.addItem(planName);
         }
     }
+}
         // Constructor إضافي (Overloading) عشان يخلي الأزرار القديمة تشتغل بدون خطأ
-    public AddMemberDialog(java.awt.Frame parent, boolean modal) {
-        super(parent, modal);
-        initComponents();
-    } 
+    public AddMemberDialog(java.awt.Frame parent, boolean modal, gymmanagement.MembersPanel panel) {
+    super(parent, modal);
+    initComponents();
+    this.parentPanel = panel; // حفظ المرجع الحقيقي للبانل
+}
      
     // دالة عامة (Public Method) تسمح بتمرير البيانات بأمان ومطابقة لشروط الـ OOP
     public void setMemberData(String name, String phone, String plan) {
@@ -159,22 +163,62 @@ public class AddMemberDialog extends javax.swing.JDialog {
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
           
-        // 1. التحقق من أن الخانات مش فاضية (Validation)
-        if (txtName.getText().trim().isEmpty() || txtPhone.getText().trim().isEmpty()) {
-        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء تعبئة جميع الحقول المطلوبة!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
+             String name = txtName.getText().trim();
+    String phone = txtPhone.getText().trim();
+    String subscription = cmbSubscription.getSelectedItem().toString();
+    
+    if (name.isEmpty()) {
+        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء إدخال اسم العضو!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
         return;
     }
-    
-        // 2. التحقق من أن المستخدم اختار اشتراك فعلاً
-        if (cmbSubscription.getSelectedItem() == null) {
-        javax.swing.JOptionPane.showMessageDialog(this, "الرجاء اختيار نوع الاشتراك!", "تنبيه", javax.swing.JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-    
-        // 3. تأكيد النجاح وإغلاق الشاشة
-        succeeded = true;
-        this.dispose(); 
 
+    // الفكرة هني: بناء الاستعلام (Query) حسب حالة الشاشة (تعديل أو إضافة)
+    String query;
+    if (this.isEditMode) {
+        // لو الحالة تعديل، نحدثوا البيانات بناءً على الاسم (أو المعرف)
+        query = "UPDATE members SET name = ?, phone = ?, gender = ? WHERE name = ?";
+    } else {
+        // لو الحالة إضافة عضو جديد
+        query = "INSERT INTO members (name, phone, gender, join_date) VALUES (?, ?, ?, ?)";
+    }
+    
+    try (java.sql.Connection con = gymmanagement.database.DatabaseConnection.getConnection();
+         java.sql.PreparedStatement pst = con.prepareStatement(query)) {
+        
+        pst.setString(1, name);
+        pst.setString(2, phone);
+        pst.setString(3, subscription); 
+        
+        if (this.isEditMode) {
+            // في حالة التعديل، الشرط WHERE ياخذ الاسم اللي تبي تبحثي بيه وتعدليه
+            // (افترضنا هني أن الاسم لم يتغير، لو تبي تعدلي الاسم نفسه يفضل تمرير الاسم القديم في متغير منفصل)
+            pst.setString(4, name); 
+        } else {
+            // في حالة الإضافة، نحددوا تاريخ اليوم
+            pst.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+        }
+        
+        // تنفيذ الأمر في قاعدة البيانات
+        pst.executeUpdate();
+        
+        // تغيير حالة النجاح لـ true عشان البانل الرئيسي يفيق
+        this.succeeded = true;
+        
+        // 🌟 الـ OOP الصح: نادّي دالة التحديث على البانل المفتوح حالياً فوراً 🌟
+        if (parentPanel != null) {
+            parentPanel.refreshMembersTable();
+        }
+        
+        // تسكير الـ Dialog
+        this.dispose();
+        
+        // رسالة نجاح مخصصة حسب العملية
+        String msg = this.isEditMode ? "تم تعديل بيانات العضو بنجاح!" : "تم إضافة العضو بنجاح!";
+        javax.swing.JOptionPane.showMessageDialog(null, msg, "نجاح", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        
+    } catch (java.sql.SQLException e) {
+        javax.swing.JOptionPane.showMessageDialog(this, "خطأ في قاعدة البيانات: " + e.getMessage(), "خطأ", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void cmbSubscriptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbSubscriptionActionPerformed
@@ -237,7 +281,7 @@ public class AddMemberDialog extends javax.swing.JDialog {
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                AddMemberDialog dialog = new AddMemberDialog(new javax.swing.JFrame(), true);
+                AddMemberDialog dialog = new AddMemberDialog(new javax.swing.JFrame(), true,null);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
